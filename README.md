@@ -35,13 +35,14 @@
 ---
 
 ## 🛠️ Tech Stack
-
-- **Python / FastAPI** — Backend API
-- **LangChain + OpenAI GPT-4** — NLP, root cause engine, structured thinking
-- **Graphviz / Mermaid.js** — Visual diagram generation
-- **React + TailwindCSS** — Modern frontend
-- **PostgreSQL** — For storing cases, sessions
-- **Docker / Cloud** — Deployment-ready
+- Python — Core language for backend and document processing
+- Google Generative AI (Gemini) — LLM for HyDE query and anomaly analysis
+- SentenceTransformers + CrossEncoder — Embeddings and reranking for semantic search
+- ChromaDB — Vector store for document indexing and retrieval
+- PyMuPDF / Tesseract OCR / OpenCV — PDF reading, image extraction, and text recognition
+- Graphviz — Visual recommendation map generation
+- React + Node.js — Modern frontend
+- Docker — Deployment environment
 
 ---
 
