@@ -63,6 +63,46 @@ const mockInventoryData = [
     benefits: 'Potential to capture an additional $25k in sales by aligning inventory with anticipated demand, reducing missed opportunities.',
     status: 'pending',
   };
+
+  // --- NEW MOCK RISK DATA ---
+  const mockRiskIndicators = [
+    {
+      id: 'risk-001',
+      description: 'Potential port congestion at Long Beach affecting incoming shipments.',
+      severity: 'Medium', // Could be Low, Medium, High, Critical
+      status: 'Active', // Could be Active, Mitigated, Resolved
+      detected_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // Detected 2 days ago
+      impact_area: 'Inbound Logistics',
+    },
+    {
+      id: 'risk-002',
+      description: 'Supplier B facing potential labor shortages impacting Component Z production.',
+      severity: 'High',
+      status: 'Active',
+      detected_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // Detected 1 day ago
+      impact_area: 'Procurement, Production',
+    },
+     {
+      id: 'risk-003',
+      description: 'Increased chance of extreme weather events in Southeast region.',
+      severity: 'Low',
+      status: 'Monitoring',
+      detected_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // Detected 5 days ago
+      impact_area: 'Transportation, Warehouse Ops',
+    },
+  ];
+  
+  const mockRiskRecommendation = {
+    id: 'risk-rec-001',
+    agent_type: 'RiskAgent',
+    related_risk_id: 'risk-002', // Link to the specific risk if applicable
+    summary: 'Initiate secondary sourcing qualification for Component Z with Supplier D.',
+    details: 'Supplier B\'s ongoing labor negotiation poses a >60% chance of production disruption within the next 4 weeks. Qualifying Supplier D provides an alternative supply source.',
+    reasoning: 'Reduces single-supplier dependency for a critical component, mitigating potential stockouts or production delays.',
+    benefits: 'Estimated $50k revenue protected by ensuring supply continuity. Qualification lead time approx. 3 weeks.',
+    status: 'pending',
+  };
+  // --- END MOCK RISK DATA ---
   // --- END MOCK DATA ---
   
   // Simulate API call delay
@@ -140,5 +180,23 @@ const mockInventoryData = [
     return pendingRecs.length > 0 ? pendingRecs[0] : null; // Return first pending or null
   };
   
+
+  export const fetchRiskIndicators = async () => {
+    console.log("API Call: Fetching risk indicators...");
+    await delay(600); // Simulate network latency
+    // In real app: const response = await fetch('/api/dashboard/risk-indicators?status=active,monitoring'); ...
+    console.log("API Call: Received risk indicators.");
+    // Return active/monitored risks
+    return mockRiskIndicators.filter(r => r.status === 'Active' || r.status === 'Monitoring');
+  };
+  
+  export const fetchRiskRecommendations = async () => {
+    console.log("API Call: Fetching risk recommendations...");
+    await delay(1000);
+    // In real app: const response = await fetch('/api/recommendations?agent_type=risk&status=pending'); ...
+    const pendingRecs = Math.random() > 0.4 ? [mockRiskRecommendation] : []; // ~60% chance for risk rec
+    console.log(`API Call: Received ${pendingRecs.length} risk recommendations.`);
+    return pendingRecs.length > 0 ? pendingRecs[0] : null; // Return first pending or null
+  };
   // Add rejectRecommendation if needed later
   // export const rejectRecommendation = async (id) => { ... }
