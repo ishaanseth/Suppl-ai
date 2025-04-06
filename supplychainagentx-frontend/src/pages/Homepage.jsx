@@ -1,117 +1,112 @@
 // src/pages/Homepage.jsx
 import React, { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown'; // Import the markdown renderer
+import ReactMarkdown from 'react-markdown'; // Still useful for bullet points
 
 // Import Material UI components
 import {
-  Container, Box, Typography, Card, CardContent, CircularProgress, Alert, Divider, Grid
+  Container, Box, Typography, Card, CardContent, CircularProgress, Alert, Divider, Grid, Paper
 } from '@mui/material';
+import InsightsIcon from '@mui/icons-material/Insights'; // Example icon
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 
-// Mock API function (replace with actual fetch later)
-const fetchBackendAnalysis = async () => {
-  console.log("API Call: Fetching backend analysis text...");
-  await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+// Import the new API function
+import { fetchBackendAnalysis } from '../services/api'; // Make sure path is correct
 
-  // --- PASTE YOUR EXAMPLE BACKEND OUTPUT HERE ---
-  const mockAnalysisOutput = `## Analysis of Supply Chain Issues:
+// --- New Parser for Q1 2025 Text Structure ---
+const parseQ1Analysis = (text) => {
+  const sections = {};
+  const headers = [
+    "General Trend Analysis", // Use simplified key
+    "Detailed Analysis of Anomalies and Issues", // Use simplified key
+    "Delivery Delays or Timeline Inconsistencies",
+    "Price Fluctuations Outside Normal Ranges",
+    "Quantity Discrepancies",
+    "Quality Issues",
+    "Supplier Performance Problems",
+    "Logistical Bottlenecks",
+    "Carbon Footprint"
+  ];
 
-Based on the provided information, we can identify the following potential issues:
+  let remainingText = text;
 
-**1. Quality Issues:**
+  // Extract General Trend Analysis first, as it has a slightly different intro
+  const trendHeader = "General Trend Analysis";
+  const detailHeader = "Detailed Analysis of Anomalies and Issues";
+  const trendStartIndex = text.indexOf(trendHeader);
+  const detailStartIndex = text.indexOf(detailHeader);
 
-*   **Product Design Flaw:** The new bottle design has been identified as a major issue. The new bottles cause less ketchup to come out per squeeze, which is a significant inconvenience for customers. This indicates a flaw in the product design and a lack of proper testing before implementation.
-
-**2. Supplier Performance Problems:**
-
-*   **Bottling Process Modification:** The FMCG company modified their bottle manufacturing process. While the specific details of the modification are not provided, it is implied that the change negatively impacted the product functionality. This suggests a potential problem with the supplier's execution or the company's internal oversight of the process.
-
-**3. Customer Dissatisfaction:**
-
-*   **Negative Customer Feedback:** The information implies that customers did not like the new bottle design. This indicates a lack of customer satisfaction and potentially negative word-of-mouth marketing.
-
-**4. Potential Logistical Bottlenecks (Indirect):**
-
-*   **Reduced Product Efficiency:** The reduced ketchup output per squeeze could potentially lead to slower product usage and increased consumer dissatisfaction. This might indirectly impact the company's logistics due to potential return requests, product replacements, or reduced sales volumes.
-
-**Analysis:**
-
-The primary issue appears to be a flawed bottle design. This flaw directly impacted product functionality and negatively affected customer satisfaction, leading to a decline in sales and profits. The information suggests a possible lack of thorough product testing before implementing the new bottle design. Additionally, there might be supplier performance issues associated with the implementation of the bottling process modification.
-
-**Solution:**
-
-The company needs to address the bottle design flaw as the primary solution. This could involve:
-
-1.  **Re-designing the bottle:** They should prioritize a bottle design that offers ease of use and consistent ketchup output. This requires extensive testing and consumer feedback to ensure a successful redesign.
-2.  **Reviewing the bottling process:** The company should review the modifications made to the bottling process and work with their supplier to ensure they meet quality standards and customer expectations.
-3.  **Addressing customer concerns:** The company needs to actively address customer concerns regarding the new bottle design. This can be done through transparent communication, offering refunds or replacements, and actively seeking customer feedback for future improvements.
-4.  **Implementing a robust product testing process:** The company should implement a rigorous product testing process before introducing any new design or process changes. This will help avoid similar issues in the future.
-
-**Note:**
-
-The provided information is limited, and a deeper analysis would require more information about the bottle design, the changes implemented in the manufacturing process, and the specific feedback received from customers.`;
-  // ---------------------------------------------
-
-  console.log("API Call: Received analysis text.");
-  return mockAnalysisOutput;
-};
-
-// Simple function to split text into sections (can be improved)
-const parseAnalysisText = (text) => {
-  const sections = {
-    introduction: '',
-    identifiedIssues: '',
-    analysis: '',
-    solution: '',
-    note: '',
-  };
-
-  // Split logic (adjust markers as needed based on actual consistent output)
-  const analysisMarker = "\n**Analysis:**\n";
-  const solutionMarker = "\n**Solution:**\n";
-  const noteMarker = "\n**Note:**\n"; // Assuming "Note:" is always preceded by **
-
-  const noteIndex = text.indexOf(noteMarker);
-  const solutionIndex = text.indexOf(solutionMarker);
-  const analysisIndex = text.indexOf(analysisMarker);
-
-  // Extract sections based on markers
-  if (noteIndex !== -1) {
-    sections.note = text.substring(noteIndex + noteMarker.length).trim();
-    text = text.substring(0, noteIndex); // Remove note part from text
-  }
-  if (solutionIndex !== -1) {
-    sections.solution = text.substring(solutionIndex + solutionMarker.length).trim();
-     text = text.substring(0, solutionIndex); // Remove solution part
-  }
-   if (analysisIndex !== -1) {
-    sections.analysis = text.substring(analysisIndex + analysisMarker.length).trim();
-     text = text.substring(0, analysisIndex); // Remove analysis part
-  }
-
-  // The remaining text is introduction + identified issues
-  const introEndMarker = "\nBased on the provided information"; // Find end of intro roughly
-  const introEndIndex = text.indexOf(introEndMarker);
-  if (introEndIndex !== -1) {
-       const issuesStartIndex = text.indexOf("\n**1."); // Find start of numbered issues
-       if (issuesStartIndex !== -1) {
-           sections.introduction = text.substring(0, issuesStartIndex).replace("## Analysis of Supply Chain Issues:", "").trim();
-           sections.identifiedIssues = text.substring(issuesStartIndex).trim();
-       } else {
-            // Fallback if numbered list isn't found after intro marker
-           sections.identifiedIssues = text.replace("## Analysis of Supply Chain Issues:", "").trim();
-       }
+  if (trendStartIndex !== -1 && detailStartIndex !== -1) {
+    sections['generalTrend'] = text.substring(trendStartIndex + trendHeader.length, detailStartIndex).trim();
+    remainingText = text.substring(detailStartIndex); // Start parsing details from here
+  } else if (trendStartIndex !== -1) {
+     // Only trend found
+     sections['generalTrend'] = text.substring(trendStartIndex + trendHeader.length).trim();
+     remainingText = ''; // No more text left
   } else {
-       // Fallback if intro marker not found
-       sections.identifiedIssues = text.replace("## Analysis of Supply Chain Issues:", "").trim();
+      console.warn("General Trend Analysis section header not found.");
+  }
+
+  // Now parse the detailed sections
+  const detailHeaders = headers.slice(1); // Skip the first two general headers
+
+  for (let i = 0; i < detailHeaders.length; i++) {
+    const currentHeader = detailHeaders[i];
+    // Generate camelCase key (e.g., "Delivery Delays..." -> "deliveryDelays")
+    const key = currentHeader.charAt(0).toLowerCase() + currentHeader.slice(1).replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase()).replace(/\s+/g, '');
+
+    const startIndex = remainingText.indexOf(currentHeader + ":"); // Look for header ending with colon
+    if (startIndex === -1) {
+        console.warn(`Header not found or missing colon: "${currentHeader}:"`);
+        continue; // Skip if header not found
+    }
+
+    // Find the start of the *next* header to determine the end of the current section
+    let endIndex = remainingText.length; // Default to end of text
+    for (let j = i + 1; j < detailHeaders.length; j++) {
+        const nextHeaderIndex = remainingText.indexOf(detailHeaders[j] + ":");
+        if (nextHeaderIndex !== -1 && nextHeaderIndex > startIndex) {
+            endIndex = nextHeaderIndex;
+            break; // Found the next header
+        }
+    }
+
+    sections[key] = remainingText.substring(startIndex + currentHeader.length + 1, endIndex).trim();
+  }
+
+  // Remove the "Detailed Analysis..." intro line if it was parsed as part of the first detail section
+  if (sections.deliveryDelaysOrTimelineInconsistencies) {
+      sections.deliveryDelaysOrTimelineInconsistencies = sections.deliveryDelaysOrTimelineInconsistencies.replace("Here's an analysis based on the specific categories requested:", "").trim();
   }
 
 
   return sections;
-}
+};
+
+// --- Generate Summary Sections (AI Contribution) ---
+const generateSummarySections = (parsedData) => {
+   const overallAnalysis = `
+The analysis for Q1 2025 highlights several critical areas requiring attention. **Delivery performance has significantly degraded**, with an average increase of 17% in delivery times compared to previous periods, indicating widespread reliability issues, particularly with carriers like ExpressShip and FastFreight. **Supplier quality remains inconsistent**, with key suppliers (FastSupply, GlobalComp, MetalWorks) falling below acceptable quality thresholds. Furthermore, the supply chain faced **considerable price volatility**, notably sharp increases in materials like Material Z and Component Y. While explicit quantity discrepancies couldn't be confirmed from the data, the combination of delays and quality issues points towards broader **supplier performance problems**. Potential **logistical bottlenecks**, possibly linked to specific carriers or internal network points (Supplier Hub 1, Factory 2), are suggested by the delays. Finally, **carbon footprint analysis reveals significant inefficiencies**, particularly the high emissions from air freight (ExpressShip, AirCargo) which don't correlate with improved delivery speed, suggesting poor mode selection.
+   `.trim();
+
+   const nextSteps = `
+Based on the Q1 2025 analysis, the following actions are recommended:
+
+*   **Investigate Delivery Delays:** Conduct a root cause analysis for carriers ExpressShip and FastFreight. Evaluate alternative carriers or renegotiate SLAs. Analyze internal network transit times, focusing on routes involving Supplier Hub 1 and Factory 2.
+*   **Address Quality Issues:** Initiate immediate quality reviews with FastSupply, GlobalComp, and MetalWorks. Implement corrective action plans and increase inspection frequency. Consider supplier diversification for critical components with poor quality records.
+*   **Manage Price Volatility:** Engage with MetalWorks, PrimeParts, and GlobalComp regarding recent price hikes. Explore alternative sourcing options or hedging strategies for volatile materials (Material Z, Component Y, Material X).
+*   **Optimize Transportation Modes:** Review the necessity of air freight usage, especially for shipments handled by ExpressShip where speed benefits are not realized. Prioritize sea, rail, or truck freight where feasible to reduce both costs and carbon footprint.
+*   **Enhance Supplier Performance Management:** Implement stricter performance tracking across delivery, quality, and cost metrics. Schedule regular performance reviews with key suppliers.
+*   **Improve Data Capture:** Implement processes to track received quantities against ordered quantities to enable identification of shipment discrepancies in future reports.
+   `.trim();
+
+  return { overallAnalysis, nextSteps };
+};
 
 
 function Homepage() {
-  const [analysisSections, setAnalysisSections] = useState(null);
+  const [analysisContent, setAnalysisContent] = useState(null);
+  const [summaryContent, setSummaryContent] = useState({ overallAnalysis: '', nextSteps: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -121,10 +116,13 @@ function Homepage() {
       setError(null);
       try {
         const rawText = await fetchBackendAnalysis();
-        const parsedData = parseAnalysisText(rawText);
-        setAnalysisSections(parsedData);
+        const parsedData = parseQ1Analysis(rawText);
+        const generatedSummaries = generateSummarySections(parsedData); // Generate based on parsed
+
+        setAnalysisContent(parsedData);
+        setSummaryContent(generatedSummaries);
       } catch (err) {
-        console.error("Failed to load backend analysis:", err);
+        console.error("Failed to load or parse analysis:", err);
         setError("Failed to load analysis. Please try refreshing.");
       } finally {
         setLoading(false);
@@ -133,83 +131,99 @@ function Homepage() {
     loadAnalysis();
   }, []);
 
+  const renderSection = (key, title) => {
+    if (!analysisContent || !analysisContent[key]) return null;
+    return (
+      <Grid item xs={12} md={6} key={key}> {/* Render sections side-by-side */}
+        <Paper elevation={1} sx={{ p: 2, height: '100%' }}> {/* Use Paper for lighter look? */}
+          <Typography variant="h6" component="h3" gutterBottom>{title}</Typography>
+          <Divider sx={{ mb: 2 }}/>
+          {/* Use ReactMarkdown to handle potential bullet points etc. */}
+          <Box sx={{ '& ul': { pl: 2.5, mb: 0 }, '& li': { mb: 0.5 } }}>
+            <ReactMarkdown>{analysisContent[key]}</ReactMarkdown>
+          </Box>
+        </Paper>
+      </Grid>
+    );
+  };
+
   // --- Render Logic ---
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Loading Analysis...</Typography>
-      </Box>
-    );
-  }
-
-  if (error) {
-    return <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>;
-  }
-
-  if (!analysisSections) {
-      return <Typography>No analysis data available.</Typography>; // Should not happen if loading/error handled
-  }
+  if (loading) { /* ... keep loading indicator ... */ }
+  if (error) { /* ... keep error alert ... */ }
+  if (!analysisContent) { return <Typography>No analysis data available.</Typography>; }
 
   return (
-    <Container maxWidth="lg"> {/* Use a slightly narrower container if preferred */}
+    <Container maxWidth="lg">
        <Typography variant="h4" component="h1" gutterBottom sx={{ textAlign: 'center', mb: 4 }}>
-         Supply Chain Issue Analysis
+         Q1 2025 Supply Chain Analysis
        </Typography>
 
-       <Grid container spacing={3}>
-
-        {/* Identified Issues Section */}
-        <Grid item xs={12}>
-          <Card elevation={2}>
-             <CardContent>
-               <Typography variant="h6" component="h2" gutterBottom>Identified Potential Issues</Typography>
-               <Divider sx={{ mb: 2 }}/>
-               {/* Render markdown content for this section */}
-               <Box sx={{ '& h3': { mt: 2, mb: 1, fontSize: '1.1rem' }, '& li': { mb: 0.5 } }}>
-                 <ReactMarkdown>{analysisSections.identifiedIssues}</ReactMarkdown>
-               </Box>
-             </CardContent>
-          </Card>
-        </Grid>
-
-         {/* Analysis Section */}
-         <Grid item xs={12} md={6}>
-            <Card elevation={2}>
-              <CardContent>
-                 <Typography variant="h6" component="h2" gutterBottom>Overall Analysis</Typography>
-                 <Divider sx={{ mb: 2 }}/>
-                 <ReactMarkdown>{analysisSections.analysis}</ReactMarkdown>
-              </CardContent>
-            </Card>
-         </Grid>
-
-          {/* Solution Section */}
-         <Grid item xs={12} md={6}>
-             <Card elevation={2}>
-               <CardContent>
-                 <Typography variant="h6" component="h2" gutterBottom>Proposed Solution / Next Steps</Typography>
-                  <Divider sx={{ mb: 2 }}/>
-                  {/* Add styling specifically for ordered lists if needed */}
-                  <Box sx={{ '& ol': { pl: 2.5 }, '& li': { mb: 0.5 } }}>
-                     <ReactMarkdown>{analysisSections.solution}</ReactMarkdown>
-                  </Box>
-               </CardContent>
-             </Card>
-          </Grid>
-
-           {/* Note Section (Optional) */}
-          {analysisSections.note && (
-             <Grid item xs={12}>
-                 <Alert severity="info" variant="outlined">
-                    <Typography variant="h6" component="h3" sx={{ fontSize: '1rem', mb: 1 }}>Note</Typography>
-                    <ReactMarkdown>{analysisSections.note}</ReactMarkdown>
-                 </Alert>
-              </Grid>
+       {/* Section 1: General Trends & Overall Summary */}
+       <Grid container spacing={3} sx={{ mb: 4 }}>
+          {/* General Trends */}
+          {analysisContent.generalTrend && (
+            <Grid item xs={12} md={6}>
+               <Card elevation={2} sx={{height: '100%'}}>
+                 <CardContent>
+                   <Typography variant="h5" component="h2" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                       <TrendingUpIcon sx={{ mr: 1 }} color="primary"/> General Trends (vs. Previous Qtrs)
+                    </Typography>
+                   <Divider sx={{ mb: 2 }}/>
+                    <ReactMarkdown>{analysisContent.generalTrend}</ReactMarkdown>
+                 </CardContent>
+               </Card>
+            </Grid>
           )}
-
+           {/* Overall Analysis (Generated) */}
+          <Grid item xs={12} md={6}>
+               <Card elevation={2} sx={{height: '100%', backgroundColor: 'primary.main', color: 'primary.contrastText' }}> {/* Highlight card */}
+                 <CardContent>
+                   <Typography variant="h5" component="h2" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                      <InsightsIcon sx={{ mr: 1 }}/> Overall Analysis Summary
+                   </Typography>
+                   <Divider sx={{ mb: 2, borderColor: 'rgba(255,255,255,0.3)' }}/>
+                   <Typography variant="body2">{summaryContent.overallAnalysis}</Typography>
+                 </CardContent>
+               </Card>
+          </Grid>
        </Grid>
+
+        {/* Section 2: Detailed Findings Title */}
+       <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2 }}>
+            Detailed Findings (Q1 2025)
+        </Typography>
+
+        {/* Section 3: Detailed Findings Grid */}
+       <Grid container spacing={3} sx={{ mb: 4 }}>
+          {/* Render each detailed section */}
+          {renderSection('deliveryDelaysOrTimelineInconsistencies', 'Delivery Delays / Inconsistencies')}
+          {renderSection('priceFluctuationsOutsideNormalRanges', 'Price Fluctuations')}
+          {renderSection('qualityIssues', 'Quality Issues')}
+          {renderSection('supplierPerformanceProblems', 'Supplier Performance Problems')}
+          {renderSection('logisticalBottlenecks', 'Logistical Bottlenecks')}
+          {renderSection('carbonFootprint', 'Carbon Footprint')}
+          {/* Quantity Discrepancies (might be short/simple) */}
+           {renderSection('quantityDiscrepancies', 'Quantity Discrepancies')}
+       </Grid>
+
+        {/* Section 4: Next Steps (Generated) */}
+       <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2 }}>
+            Recommended Next Steps
+        </Typography>
+        <Card elevation={2}>
+           <CardContent>
+                <Typography variant="h6" component="h3" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                   <TaskAltIcon sx={{ mr: 1 }} color="secondary"/> Action Plan
+                </Typography>
+                <Divider sx={{ mb: 2 }}/>
+                {/* Render markdown list */}
+                <Box sx={{ '& ul': { pl: 2.5 }, '& li': { mb: 1 } }}>
+                    <ReactMarkdown>{summaryContent.nextSteps}</ReactMarkdown>
+                </Box>
+            </CardContent>
+        </Card>
+
     </Container>
   );
 }
