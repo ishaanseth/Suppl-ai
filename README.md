@@ -2,7 +2,7 @@
 
 # 🤖 Suppl-ai
 
-**Your AI-Powered Consulting Partner — Built for Real Clients**
+**Your AI-Powered Consulting Partner — Built for Real Clients and Real World Impact**
 
 ---
 
