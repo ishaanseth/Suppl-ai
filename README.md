@@ -50,6 +50,6 @@
 
 ```bash
 git clone https://github.com/your-org/suupl-ai.git
-cd suupl-ai
+cd suppl-ai
 pip install -r requirements.txt
 python app.py
